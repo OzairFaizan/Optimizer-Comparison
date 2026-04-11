@@ -1,0 +1,59 @@
+\documentclass[10pt,conference,compsocconf]{IEEEtran}
+\usepackage{style}
+\usepackage{tgpagella}
+
+
+\begin{document}
+\title{
+    A Comparative Analysis of Optimization Trajectories and Convergence Properties.
+}
+\author{
+    Ozair Faizan \\
+        \texttt{\href{mailto:ahmad.faizan@epfl.ch}{ahmad.faizan@epfl.ch}} \and
+    Paul Tercier \\
+        \texttt{\href{mailto:paul.tercier@epfl.ch}{paul.tercier@epfl.ch}}\\
+}
+\maketitle
+
+\setlength{\belowdisplayskip}{2pt} \setlength{\belowdisplayshortskip}{2pt}
+\setlength{\abovedisplayskip}{2pt} \setlength{\abovedisplayshortskip}{2pt}
+
+
+\begin{abstract}
+    The choice of the optimization algorithm determines training efficiency and generalization of
+    deep neural networks. While methods such as Stochastic Gradient Descent and Adam have become
+    field standards, recent works such as Lion \cite{chen2025lionsecretlysolvesconstrained}
+    and Muon \cite{jordan2024muon} promise better convergence properties in practice.
+    In this paper we present a comparative study of the optimization trajectories produced
+    by Gradient Descent, Stochastic Gradient Descent, Adam, Lion and Muon applied to Multi-Layer
+    Perceptron on the Fashion-MNIST dataset \cite{xiao2017/online}. To this end, we use a linear interpolation method: for each discrete update
+    step from $\theta_t$ to $\theta_{t+1}$, we evaluate the loss function at $N=100?$ points along
+    the connecting vector, allowing us to empirically verify convexity and smoothness properties
+    along the trajectory.
+
+    Furthermore, we evaluate the convergence points $\vec{m}$ by testing the condition:
+    $$ f(\vec{m}) \leqslant f(\vec{x}) + \nabla f(\vec{m})\T (\vec{m} - \vec{x}), $$
+    for points $\vec{x}$ within a neighborhood $B_\varepsilon(\vec{m})$. 
+
+    We use constant learning rate found by grid-search and compare them with predicted theoretical
+    values, all other hyperparameters are set to default.
+\end{abstract}
+
+\section{Introduction}
+
+\section{Models and Methods}
+
+\section{Results}
+
+\section{Discussion}
+
+\section{Summary}
+
+
+\newpage
+\bibliographystyle{IEEEtran}
+\bibliography{literature}
+
+\end{document}
+
+
