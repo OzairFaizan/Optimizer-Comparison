@@ -25,8 +25,9 @@
     field standards, recent works such as Lion \cite{chen2025lionsecretlysolvesconstrained}
     and Muon \cite{jordan2024muon} promise better convergence properties in practice.
     In this paper we present a comparative study of the optimization trajectories produced
-    by Gradient Descent, Stochastic Gradient Descent, Adam, Lion and Muon applied to Multi-Layer
-    Perceptron on the Fashion-MNIST dataset \cite{xiao2017/online}. To this end, we use a linear interpolation method: for each discrete update
+    by Stochastic Gradient Descent, Adam, Lion and Muon applied to Multi-Layer
+    Perceptron on the Fashion-MNIST dataset \cite{xiao2017/online}.
+    To this end, we use a linear interpolation method: for each discrete update
     step from $\theta_t$ to $\theta_{t+1}$, we evaluate the loss function at $N=100?$ points along
     the connecting vector, allowing us to empirically verify convexity and smoothness properties
     along the trajectory.

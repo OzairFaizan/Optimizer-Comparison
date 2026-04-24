@@ -2,3 +2,5 @@ tqdm
 torch
 torchvision
 lion-pytorch
+matplotlib
+numpy
