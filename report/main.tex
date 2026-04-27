@@ -28,7 +28,7 @@
     by Stochastic Gradient Descent, Adam, Lion and Muon applied to Multi-Layer
     Perceptron on the Fashion-MNIST dataset \cite{xiao2017/online}.
     To this end, we use a linear interpolation method: for each discrete update
-    step from $\theta_t$ to $\theta_{t+1}$, we evaluate the loss function at $N=100?$ points along
+    step from $\theta_t$ to $\theta_{t+1}$, we evaluate the loss function at $N=20$ points along
     the connecting vector, allowing us to empirically verify convexity and smoothness properties
     along the trajectory.
 
@@ -64,10 +64,10 @@ aggregate metrics alone do not reveal.
 We fit a dense feedforward MLP model on the Fashion MNIST \cite{xiao2017/online}
 dataset which includes 10 different classes for image classification.
 This dataset contains a total of 60,000 gray-scale images of size 28x28. 
-Our model is composed of two layers, each having a width of 256 with activation ReLU, 
-followed by a linear classification layer giving rise to a total parameter count of ~270K. 
-The training regime includes cross-entropy loss, batch size 128, and 5 epochs. 
-No regularization or learning rate decay is employed for simplicity.
+Our model is composed of two hidden layers of width 256 and 128 respectively, each with ReLU activation,
+followed by a linear classification layer, giving a total of approximately 234K trainable parameters. 
+The training regime includes cross-entropy loss and 5 epochs. No regularization or learning rate decay 
+is employed for simplicity.
 
 
 The following four optimization algorithms are compared. Stochastic gradient descent (SGD) updates its parameters using
@@ -84,24 +84,24 @@ The momentum is updated by
 \end{equation*}
 The Muon optimizer~\cite{jordan2024muon} implements the Nesterov-type momentum in the direction of steepest descent in terms of the spectral norm and approximates it by performing the Newton-Schulz orthogonalization of the gradient matrix.
 
-An independent grid search is carried out within the range of learning rates
-\begin{equation*}
-    \{10^{-4},\, 3\times 10^{-4},\, 10^{-3},\, 3\times 10^{-3},\, 10^{-2}\}.
-\end{equation*}
-for each optimizer, and the learning rate resulting in the minimum training loss at epoch 50 is chosen. All other hyperparameters remain unchanged from their published values (i.e., $\beta_1$, $\beta_2$ for Adam, Lion, Muon and the momentum coefficient for SGD).
+An independent grid search is carried out over learning rates $\{10^{-4}, 10^{-3}, 10^{-2}\}$ 
+and batch sizes $\{32, 64, 128\}$ for each optimizer, selecting the combination achieving the lowest training 
+loss at epoch 20. All other hyperparameters remain at their published defaults ($\beta_1$, $\beta_2$ for Adam, Lion, and Muon).
 
 For each optimizer, the parameter vectors $\theta_t$ and $\theta_{t+1}$ are stored at each training iteration. The loss function is calculated at the points along the straight line
 \begin{equation*}
     \theta(\alpha) = (1-\alpha)\,\theta_t + \alpha\,\theta_{t+1}, \quad \alpha \in \{0,\, 1/N,\, \ldots,\, 1\},
 \end{equation*}
-where $N=100$. This analysis allows us to check if the loss function along the update trajectory is convex, concave, or nonmonotone, thus providing a local approximation of the curvature of the loss landscape.
+where $N=20$. This analysis allows us to check if the loss function along the update trajectory is convex, concave, or nonmonotone, thus providing a local approximation of the curvature of the loss landscape.
 
 Let $m$ denote the parameter vector at the end of training. We verify the first-order characterization of convexity:
 \begin{equation}
     f(m) \leq f(x) + \nabla f(m)^\top (m - x),
     \quad \forall\, x \in \mathcal{B}_\varepsilon(m),
 \end{equation}
-by sampling $K=50$ directions uniformly on the unit sphere and evaluating $f$ at radius $\varepsilon \in \{10^{-3}, 10^{-2}, 10^{-1}\}$. A convergence point is flagged as satisfying the condition if the inequality holds for all sampled $x$ at a given $\varepsilon$, providing a soft empirical measure of local convexity.
+by sampling $K=50$ directions uniformly on the unit sphere and evaluating $f$ at radius $\varepsilon = 10^{-2}$. 
+A convergence point satisfies the condition if the inequality holds for all sampled $x$, providing an empirical 
+measure of local convexity.
 
 \section{Results}
 The selected learning rates and final values for both train loss and test accuracy after 
@@ -127,6 +127,20 @@ Muon & $10^{-3}$ & 64  & 0.3921 & 87.29 \\
 \end{tabular}
 \end{table}
 
+Loss Landscape along Update Directions.
+Fig.~\ref{fig:interp} illustrates the evolution of loss values along $N=20$ interpolation points on the line
+$\theta(\alpha) = (1 - \alpha)\theta_t + \alpha\theta_{t+1}$ across all 5 training epochs.
+At the early stage of the training process (epoch 1), SGD and Muon produce non-convex paths,
+while Adam and Lion are already showing convex paths. Starting from epoch 2, SGD, Adam,
+and Lion demonstrate convex, monotonically decreasing paths, while Muon remains non-convex until epoch 4, 
+reflecting the more exploratory nature of its orthogonalized updates.
+
+\begin{figure}[h] %depending on content size may need to be resized
+    \centering
+    \includegraphics[width=\columnwidth]{loss_trajectories.png}
+    \caption{Loss evaluated along the linear interpolation $\theta(\alpha) = (1-\alpha)\theta_t + \alpha\theta_{t+1}$ for each epoch. Dashed lines show the convexity bound (linear interpolation of endpoint losses).}
+    \label{fig:interp}
+\end{figure}
 
 \section{Discussion}
 
