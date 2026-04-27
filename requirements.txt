@@ -4,3 +4,4 @@ torchvision
 lion-pytorch
 matplotlib
 numpy
+ipywidgets
