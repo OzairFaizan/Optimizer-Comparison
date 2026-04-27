@@ -41,10 +41,92 @@
 \end{abstract}
 
 \section{Introduction}
+The choice of the optimizer is central to the process of training deep neural networks, 
+influencing not only the speed of convergence but also the ability of the model to generalize. 
+Even though there is a vast number of available optimizers that can be applied to train 
+a deep neural network, \cite{schneider2021descending} identified over one hundred unique algorithms, 
+yet only two have dominated the scene: Stochastic Gradient Descent (SGD) \cite{robbins1951stochastic} and Adam \cite{kingma2015adam}. 
+However, recent studies have refuted the common belief. According to \cite{chen2025lionsecretlysolvesconstrained}, 
+the Lion optimizer, which was developed based on symbolic search for update equations, 
+is able to achieve similar levels of effectiveness without having problems with large amounts of memory usage. 
+Furthermore, the Muon optimizer \cite{jordan2024muon} employs Nesterov momentum using a spectral norm-based method.
+
+Empirical comparisons typically report aggregate metrics such as final test accuracy 
+or training loss curves. Less studied is the geometry of the optimization trajectory 
+itself: whether successive parameter updates traverse locally convex regions of the 
+loss landscape, how smooth the loss appears along each step, and whether convergence 
+points satisfy local optimality conditions. These properties connect directly to 
+quantities central to optimization theory such as Lipschitz smoothness, strong convexity, 
+gradient dominance and may explain behavioral differences between optimizers that 
+aggregate metrics alone do not reveal.
 
 \section{Models and Methods}
+We fit a dense feedforward MLP model on the Fashion MNIST \cite{xiao2017/online}
+dataset which includes 10 different classes for image classification.
+This dataset contains a total of 60,000 gray-scale images of size 28x28. 
+Our model is composed of two layers, each having a width of 256 with activation ReLU, 
+followed by a linear classification layer giving rise to a total parameter count of ~270K. 
+The training regime includes cross-entropy loss, batch size 128, and 5 epochs. 
+No regularization or learning rate decay is employed for simplicity.
+
+
+The following four optimization algorithms are compared. Stochastic gradient descent (SGD) updates its parameters using
+\begin{equation*}
+    \theta_{t+1} = \theta_t - \eta g_t.
+\end{equation*}
+Here, $g_t$ represents the stochastic gradient. The Adam optimizer~\cite{kingma2015adam} computes the first- and second-moment averages of the gradient and performs bias-corrected adaptive steps per coordinate. The Lion optimizer~\cite{chen2025lionsecretlysolvesconstrained} uses only the sign of a momentum-gradient sum as the update direction:
+\begin{equation*}
+    \theta_{t+1} = \theta_t - \eta \mathrm{sign}\bigl(\beta_1 m_t + (1-\beta_1) g_t\bigr).
+\end{equation*}
+The momentum is updated by
+\begin{equation*}
+    m_{t+1} = \beta_2 m_t + (1-\beta_2) g_t.
+\end{equation*}
+The Muon optimizer~\cite{jordan2024muon} implements the Nesterov-type momentum in the direction of steepest descent in terms of the spectral norm and approximates it by performing the Newton-Schulz orthogonalization of the gradient matrix.
+
+An independent grid search is carried out within the range of learning rates
+\begin{equation*}
+    \{10^{-4},\, 3\times 10^{-4},\, 10^{-3},\, 3\times 10^{-3},\, 10^{-2}\}.
+\end{equation*}
+for each optimizer, and the learning rate resulting in the minimum training loss at epoch 50 is chosen. All other hyperparameters remain unchanged from their published values (i.e., $\beta_1$, $\beta_2$ for Adam, Lion, Muon and the momentum coefficient for SGD).
+
+For each optimizer, the parameter vectors $\theta_t$ and $\theta_{t+1}$ are stored at each training iteration. The loss function is calculated at the points along the straight line
+\begin{equation*}
+    \theta(\alpha) = (1-\alpha)\,\theta_t + \alpha\,\theta_{t+1}, \quad \alpha \in \{0,\, 1/N,\, \ldots,\, 1\},
+\end{equation*}
+where $N=100$. This analysis allows us to check if the loss function along the update trajectory is convex, concave, or nonmonotone, thus providing a local approximation of the curvature of the loss landscape.
+
+Let $m$ denote the parameter vector at the end of training. We verify the first-order characterization of convexity:
+\begin{equation}
+    f(m) \leq f(x) + \nabla f(m)^\top (m - x),
+    \quad \forall\, x \in \mathcal{B}_\varepsilon(m),
+\end{equation}
+by sampling $K=50$ directions uniformly on the unit sphere and evaluating $f$ at radius $\varepsilon \in \{10^{-3}, 10^{-2}, 10^{-1}\}$. A convergence point is flagged as satisfying the condition if the inequality holds for all sampled $x$ at a given $\varepsilon$, providing a soft empirical measure of local convexity.
 
 \section{Results}
+The selected learning rates and final values for both train loss and test accuracy after 
+5 epochs are shown in Table 1. All four optimizers show competitive test accuracy 
+on Fashion-MNIST dataset. The highest test accuracy is achieved by both Adam 87.74\% 
+and Lion 87.81\%, followed by Muon with 87.29\% and SGD with 85.43\%. Lion optimizer 
+achieves an accuracy comparable to Adam with a learning rate that is 10x lower than the 
+latter due to the sign-based update producing larger step sizes.
+
+\begin{table}[h]
+\centering
+\caption{Selected learning rates and final performance after 5 epochs.}
+\label{tab:perf}
+\begin{tabular}{lcccc}
+\hline
+Optimizer & LR & Batch Size & Train Loss & Test Acc. (\%) \\
+\hline
+SGD  & $10^{-2}$ & 32  & 0.3741 & 85.43 \\
+Adam & $10^{-3}$ & 64  & 0.2859 & 87.74 \\
+Lion & $10^{-4}$ & 128 & 0.2866 & 87.81 \\
+Muon & $10^{-3}$ & 64  & 0.3921 & 87.29 \\
+\hline
+\end{tabular}
+\end{table}
+
 
 \section{Discussion}
 
@@ -52,6 +134,7 @@
 
 
 \newpage
+
 \bibliographystyle{IEEEtran}
 \bibliography{literature}
 
