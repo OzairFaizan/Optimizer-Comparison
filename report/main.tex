@@ -15,8 +15,8 @@
 }
 \maketitle
 
-\setlength{\belowdisplayskip}{2pt} \setlength{\belowdisplayshortskip}{2pt}
-\setlength{\abovedisplayskip}{2pt} \setlength{\abovedisplayshortskip}{2pt}
+% \setlength{\belowdisplayskip}{2pt} \setlength{\belowdisplayshortskip}{2pt}
+% \setlength{\abovedisplayskip}{2pt} \setlength{\abovedisplayshortskip}{2pt}
 
 
 \begin{abstract}
@@ -27,106 +27,131 @@
     In this paper we present a comparative study of the optimization trajectories produced
     by Stochastic Gradient Descent, Adam, Lion and Muon applied to Multi-Layer
     Perceptron on the Fashion-MNIST dataset \cite{xiao2017/online}.
-    To this end, we use a linear interpolation method: for each discrete update
-    step from $\theta_t$ to $\theta_{t+1}$, we evaluate the loss function at $N=20$ points along
+    To this end, we use a linear interpolation method: for parameters $\vec{\theta}_t$ before and
+    $\vec{\theta}_{t+1}$ after an epoch, we evaluate the loss function at $N=50$ points along
     the connecting vector, allowing us to empirically verify convexity and smoothness properties
     along the trajectory.
 
-    Furthermore, we evaluate the convergence points $\vec{m}$ by testing the condition:
-    $$ f(\vec{m}) \leqslant f(\vec{x}) + \nabla f(\vec{m})\T (\vec{m} - \vec{x}), $$
-    for points $\vec{x}$ within a neighborhood $B_\varepsilon(\vec{m})$. 
+    Furthermore, we evaluate the convergence points $\vec{\theta}$ by testing the condition:
+    $$ f(\vec{\theta}) \leqslant f(\vec{x}) + \nabla f(\vec{\theta})\T (\vec{\theta} - \vec{x}), $$
+    for points $\vec{x}$ within a neighborhood $B_\varepsilon(\vec{\theta})$. 
 
-    We use constant learning rate found by grid-search and compare them with predicted theoretical
-    values, all other hyperparameters are set to default.
+    We use constant learning rate, and batch-size found by grid-search and compare them with
+    predicted theoretical values, all other hyperparameters are set to default.
 \end{abstract}
 
 \section{Introduction}
 The choice of the optimizer is central to the process of training deep neural networks, 
 influencing not only the speed of convergence but also the ability of the model to generalize. 
-Even though there is a vast number of available optimizers that can be applied to train 
+There is a vast number of available optimizers that can be applied to train 
 a deep neural network, \cite{schneider2021descending} identified over one hundred unique algorithms, 
 yet only two have dominated the scene: Stochastic Gradient Descent (SGD) \cite{robbins1951stochastic} and Adam \cite{kingma2015adam}. 
-However, recent studies have refuted the common belief. According to \cite{chen2025lionsecretlysolvesconstrained}, 
-the Lion optimizer, which was developed based on symbolic search for update equations, 
+The Lion optimizer, which was developed based on symbolic search for update equations, 
 is able to achieve similar levels of effectiveness without having problems with large amounts of memory usage. 
-Furthermore, the Muon optimizer \cite{jordan2024muon} employs Nesterov momentum using a spectral norm-based method.
+Furthermore, the Muon optimizer, developed initially to speed up the NanoGPT
+training, has shown better convergence rates.
 
 Empirical comparisons typically report aggregate metrics such as final test accuracy 
 or training loss curves. Less studied is the geometry of the optimization trajectory 
 itself: whether successive parameter updates traverse locally convex regions of the 
 loss landscape, how smooth the loss appears along each step, and whether convergence 
-points satisfy local optimality conditions. These properties connect directly to 
-quantities central to optimization theory such as Lipschitz smoothness, strong convexity, 
-gradient dominance and may explain behavioral differences between optimizers that 
-aggregate metrics alone do not reveal.
+points satisfy local optimality conditions. Our analysis shows behavioral differences between
+optimizers that aggregate metrics alone may not reveal.
 
 \section{Models and Methods}
-We fit a dense feedforward MLP model on the Fashion MNIST \cite{xiao2017/online}
-dataset which includes 10 different classes for image classification.
-This dataset contains a total of 60,000 gray-scale images of size 28x28. 
-Our model is composed of two hidden layers of width 256 and 128 respectively, each with ReLU activation,
-followed by a linear classification layer, giving a total of approximately 234K trainable parameters. 
-The training regime includes cross-entropy loss and 5 epochs. No regularization or learning rate decay 
-is employed for simplicity.
+We fit an MLP on the Fashion MNIST dataset which includes 10 different classes
+for image classification. This dataset contains a total of 60,000 gray-scale images of size
+$28\times28$. 
+Our model is composed of two hidden layers of width 256 and 128 respectively, each with ReLU
+activation, followed by a linear classification layer, giving a total of approximately 234K
+trainable parameters.
+The cross-entropy loss is used with no regularization nor weight-decay for simplicity.
 
-
-The following four optimization algorithms are compared. Stochastic gradient descent (SGD) updates its parameters using
+The following four optimization algorithms are compared. Stochastic gradient descent updates its parameters using
 \begin{equation*}
-    \theta_{t+1} = \theta_t - \eta g_t.
+    \vec{\theta}_{t+1} = \vec{\theta}_t - \eta \vec{g}_t.
 \end{equation*}
-Here, $g_t$ represents the stochastic gradient. The Adam optimizer~\cite{kingma2015adam} computes the first- and second-moment averages of the gradient and performs bias-corrected adaptive steps per coordinate. The Lion optimizer~\cite{chen2025lionsecretlysolvesconstrained} uses only the sign of a momentum-gradient sum as the update direction:
+Here, $g_t$ represents the stochastic gradient. The Adam optimizer computes the first- and second-moment averages of the gradient and performs bias-corrected adaptive steps per coordinate. The Lion optimizer uses only the sign of a momentum-gradient sum as the update direction:
 \begin{equation*}
-    \theta_{t+1} = \theta_t - \eta \mathrm{sign}\bigl(\beta_1 m_t + (1-\beta_1) g_t\bigr).
+    \vec{\theta}_{t+1} = \vec{\theta}_t -
+                \eta \mathrm{sign}\bigl(\beta_1 \vec{m}_t + (1-\beta_1) \vec{g}_t\bigr).
 \end{equation*}
 The momentum is updated by
 \begin{equation*}
-    m_{t+1} = \beta_2 m_t + (1-\beta_2) g_t.
+    \vec{m}_{t+1} = \beta_2 \vec{m}_t + (1-\beta_2) \vec{g}_t.
 \end{equation*}
-The Muon optimizer~\cite{jordan2024muon} implements the Nesterov-type momentum in the direction of steepest descent in terms of the spectral norm and approximates it by performing the Newton-Schulz orthogonalization of the gradient matrix.
+The Muon optimizer implements the Nesterov-type momentum in the direction of steepest descent in terms of the spectral norm and approximates it by performing the Newton-Schulz orthogonalization of the gradient matrix.
 
-An independent grid search is carried out over learning rates $\{10^{-4}, 10^{-3}, 10^{-2}\}$ 
-and batch sizes $\{32, 64, 128\}$ for each optimizer, selecting the combination achieving the lowest training 
-loss at epoch 20. All other hyperparameters remain at their published defaults ($\beta_1$, $\beta_2$ for Adam, Lion, and Muon).
+The hyperparameters used for our analysis are found by performing a grid search over learning rates
+in $\{10^{-4}, 10^{-3}, 10^{-2}\}$ and batch sizes in $\{32, 64, 128\}$ and selecting the
+combination that activation the lowest training loss for each optimizers after epoch 20.
+All other hyperparameters are kept at their published defaults.
 
-For each optimizer, the parameter vectors $\theta_t$ and $\theta_{t+1}$ are stored at each training iteration. The loss function is calculated at the points along the straight line
+For each optimizer, the parameter vectors $\vec{\theta}_t$ and $\vec{\theta}_{t+1}$ are stored at
+each epoch for a total of 5 epochs.
+The loss over the training set is computed at the points along the line
 \begin{equation*}
-    \theta(\alpha) = (1-\alpha)\,\theta_t + \alpha\,\theta_{t+1}, \quad \alpha \in \{0,\, 1/N,\, \ldots,\, 1\},
+    \vec{\theta}(\alpha) = (1-\alpha)\vec{\theta}_t + \alpha\vec{\theta}_{t+1}
 \end{equation*}
-where $N=20$. This analysis allows us to check if the loss function along the update trajectory is convex, concave, or nonmonotone, thus providing a local approximation of the curvature of the loss landscape.
+for $\alpha \in \{0, 1/N, \ldots, 1\}$ and $N=50$.
 
-Let $m$ denote the parameter vector at the end of training. We verify the first-order characterization of convexity:
-\begin{equation}
-    f(m) \leq f(x) + \nabla f(m)^\top (m - x),
-    \quad \forall\, x \in \mathcal{B}_\varepsilon(m),
-\end{equation}
-by sampling $K=50$ directions uniformly on the unit sphere and evaluating $f$ at radius $\varepsilon = 10^{-2}$. 
-A convergence point satisfies the condition if the inequality holds for all sampled $x$, providing an empirical 
-measure of local convexity.
+This allows us to analyze local approximation of the loss along the ``average'' trajectory.
+
+Furthermore, we verify the first-order characterization of convexity by sampling $K=50$ points in
+the ball $B_\varepsilon(\vec{\theta})$ with $\varepsilon = 10^{-2}$, and checking,
+$$ f(\vec{\theta}) \leqslant f(\vec{x}) + \nabla f(\vec{\theta})\T (\vec{\theta} - \vec{x}), $$
+providing an empirical measure of local optimality.
 
 \section{Results}
-The selected learning rates and final values for both train loss and test accuracy after 
-5 epochs are shown in Table 1. All four optimizers show competitive test accuracy 
-on Fashion-MNIST dataset. The highest test accuracy is achieved by both Adam 87.74\% 
-and Lion 87.81\%, followed by Muon with 87.29\% and SGD with 85.43\%. Lion optimizer 
-achieves an accuracy comparable to Adam with a learning rate that is 10x lower than the 
-latter due to the sign-based update producing larger step sizes.
+The selected learning rates and batch-sizes along with final train loss and test accuracy after 
+20 epochs are shown in Table~\ref{tab:perf}.
 
 \begin{table}[h]
 \centering
-\caption{Selected learning rates and final performance after 5 epochs.}
+\caption{Selected learning rates and final performance after 20 epochs.}
 \label{tab:perf}
 \begin{tabular}{lcccc}
 \hline
 Optimizer & LR & Batch Size & Train Loss & Test Acc. (\%) \\
 \hline
-SGD  & $10^{-2}$ & 32  & 0.3741 & 85.43 \\
-Adam & $10^{-3}$ & 64  & 0.2859 & 87.74 \\
-Lion & $10^{-4}$ & 128 & 0.2866 & 87.81 \\
-Muon & $10^{-3}$ & 64  & 0.3921 & 87.29 \\
+SGD  & $10^{-2}$ & 32  & 0.2383 & 88.38 \\
+Adam & $10^{-3}$ & 64  & 0.1426 & 88.66 \\
+Lion & $10^{-4}$ & 128 & 0.1269 & 88.52 \\
+Muon & $10^{-3}$ & 64  & 0.0600 & 90.01 \\
 \hline
 \end{tabular}
 \end{table}
 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\columnwidth]{img/loss_trajectory_epoch1.pdf}
+    \vspace{1ex}
+    \includegraphics[width=0.48\columnwidth]{img/loss_trajectory_epoch2.pdf}
+    \hfill
+    \includegraphics[width=0.48\columnwidth]{img/loss_trajectory_epoch3.pdf}
+    \vspace{1ex}
+    \includegraphics[width=0.48\columnwidth]{img/loss_trajectory_epoch4.pdf}
+    \hfill
+    \includegraphics[width=0.48\columnwidth]{img/loss_trajectory_epoch5.pdf}
+    \caption{Loss evaluated along the linear interpolation
+    $\vec{\theta(\alpha)} = (1-\alpha)\vec{\theta}_t + \alpha\vec{\theta}_{t+1}$ for each epoch.
+    Dashed lines show the linear interpolation of endpoint losses.}
+    \label{fig:interp}
+\end{figure}
+
+{\color{magenta}TODO: Convergence test results.}
+
+
+\section{Discussion}
+{\color{magenta}TODO: Update for the new results.}
+
+All four optimizers show competitive test accuracy 
+on Fashion-MNIST dataset. The highest test accuracy is achieved by both Adam 87.74\% 
+and Lion 87.81\%, followed by Muon with 87.29\% and SGD with 85.43\%. Lion optimizer 
+achieves an accuracy comparable to Adam with a learning rate that is 10x lower than the 
+latter due to the sign-based update producing larger step sizes.
+
+{\color{magenta}TODO: Update for the new results.}
 Loss Landscape along Update Directions.
 Fig.~\ref{fig:interp} illustrates the evolution of loss values along $N=20$ interpolation points on the line
 $\theta(\alpha) = (1 - \alpha)\theta_t + \alpha\theta_{t+1}$ across all 5 training epochs.
@@ -135,22 +160,14 @@ while Adam and Lion are already showing convex paths. Starting from epoch 2, SGD
 and Lion demonstrate convex, monotonically decreasing paths, while Muon remains non-convex until epoch 4, 
 reflecting the more exploratory nature of its orthogonalized updates.
 
-\begin{figure}[h] %depending on content size may need to be resized
-    \centering
-    \includegraphics[width=\columnwidth]{loss_trajectories.png}
-    \caption{Loss evaluated along the linear interpolation $\theta(\alpha) = (1-\alpha)\theta_t + \alpha\theta_{t+1}$ for each epoch. Dashed lines show the convexity bound (linear interpolation of endpoint losses).}
-    \label{fig:interp}
-\end{figure}
+{\color{magenta}TODO: Discuss the convergence test results.}
 
-\section{Discussion}
 
 \section{Summary}
+{\color{magenta}TODO: Repeat abstract with results in mind.}
 
 
-\newpage
-
-\bibliographystyle{IEEEtran}
-\bibliography{literature}
+\printbibliography
 
 \end{document}
 
