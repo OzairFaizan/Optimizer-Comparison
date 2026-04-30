@@ -36,8 +36,8 @@
     $$ f(\vec{\theta}) \leqslant f(\vec{x}) + \nabla f(\vec{\theta})\T (\vec{\theta} - \vec{x}), $$
     for points $\vec{x}$ within a neighborhood $B_\varepsilon(\vec{\theta})$. 
 
-    We use constant learning rate, and batch-size found by grid-search and compare them with
-    predicted theoretical values, all other hyperparameters are set to default.
+    We use constant learning rate, and batch-size found by grid-search, all other hyperparameters
+    are set to default.
 \end{abstract}
 
 \section{Introduction}
@@ -71,7 +71,7 @@ The following four optimization algorithms are compared. Stochastic gradient des
 \begin{equation*}
     \vec{\theta}_{t+1} = \vec{\theta}_t - \eta \vec{g}_t.
 \end{equation*}
-Here, $g_t$ represents the stochastic gradient. The Adam optimizer computes the first- and second-moment averages of the gradient and performs bias-corrected adaptive steps per coordinate. The Lion optimizer uses only the sign of a momentum-gradient sum as the update direction:
+Here, $\vec{g}_t$ represents the stochastic gradient. The Adam optimizer computes the first- and second-moment averages of the gradient and performs bias-corrected adaptive steps per coordinate. The Lion optimizer uses only the sign of a momentum-gradient sum as the update direction:
 \begin{equation*}
     \vec{\theta}_{t+1} = \vec{\theta}_t -
                 \eta \mathrm{sign}\bigl(\beta_1 \vec{m}_t + (1-\beta_1) \vec{g}_t\bigr).
@@ -97,8 +97,17 @@ for $\alpha \in \{0, 1/N, \ldots, 1\}$ and $N=50$.
 
 This allows us to analyze local approximation of the loss along the ``average'' trajectory.
 
-Furthermore, we verify the first-order characterization of convexity by sampling $K=50$ points in
-the ball $B_\varepsilon(\vec{\theta})$ with $\varepsilon = 10^{-2}$, and checking,
+We use the trajectory for verify convexity by plotting the values, and we compute the empirical
+smoothness factor along the trajectory,
+$$ L = \max_i \frac{\lVert \nabla f(\vec{\theta}_i) - \nabla f(\vec{\theta}_{i+1}) \rVert}
+                    {\lVert \vec{\theta}_i - \vec{\theta}_{i+1} \rVert}, $$
+where the gradients are computed finite differences. 
+
+
+Furthermore, we verify the first-order characterization of convexity by sampling $K=50$ points on
+the ball $B_\varepsilon(\vec{\theta})$ for
+$\varepsilon \in \{ 10^{-2}, 1, \lVert \nabla f(\vec{\theta}) \rVert\},
+10 \lVert \nabla f(\vec{\theta}) \rVert\}$, and checking,
 $$ f(\vec{\theta}) \leqslant f(\vec{x}) + \nabla f(\vec{\theta})\T (\vec{\theta} - \vec{x}), $$
 providing an empirical measure of local optimality.
 
@@ -139,36 +148,88 @@ Muon & $10^{-3}$ & 64  & 0.0600 & 90.01 \\
     \label{fig:interp}
 \end{figure}
 
-{\color{magenta}TODO: Convergence test results.}
+Fig.~\ref{fig:interp} shows the interpolation of the losses for each of the 5 epochs, the empirical
+smoothness factors are summarized in Table~\ref{tab:smooth}.
+
+\begin{table}[h]
+\centering
+\caption{Empirical Smoothness factors along the trajectory.}
+\label{tab:smooth}
+\begin{tabular}{ccccc}
+\hline
+Epoch & SGD & Adam & Lion & Muon \\
+\hline
+    1 & 9.0623 & 9.1043 & 20.157 & 7.3758 \\
+    2 & 0.0936 & 0.2062 & 0.1640 & 0.1395 \\
+    3 & 0.0872 & 0.4092 & 0.9197 & 0.0470 \\
+    4 & 0.0926 & 0.4451 & 0.1061 & 0.0282 \\
+    5 & 0.0679 & 0.2878 & 0.1345 & 0.0307 \\
+\hline
+\end{tabular}
+\end{table}
+
+Finally, the local optimality condition,
+$$ f(\vec{\theta}) \leqslant f(\vec{x}) + \nabla f(\vec{\theta})\T (\vec{\theta} - \vec{x}), $$
+is satisfied by all $K = 50$ points across all $\varepsilon$ and optimizers!
 
 
 \section{Discussion}
-{\color{magenta}TODO: Update for the new results.}
+The comparative analysis of SGD, Adam, Lion, and Muon on the Fashion-MNIST dataset reveals distinct
+geometric behaviors in their optimization trajectories. While all four optimizers successfully
+reduce the training loss over time, the "path" they take through the parameter space varies
+significantly in terms of smoothness and local curvature.
 
-All four optimizers show competitive test accuracy 
-on Fashion-MNIST dataset. The highest test accuracy is achieved by both Adam 87.74\% 
-and Lion 87.81\%, followed by Muon with 87.29\% and SGD with 85.43\%. Lion optimizer 
-achieves an accuracy comparable to Adam with a learning rate that is 10x lower than the 
-latter due to the sign-based update producing larger step sizes.
+Our linear interpolation analysis Fig. \ref{fig:interp} highlights a transition in the loss
+landscape. During the first epoch, the trajectories traverse regions of non-convexity, suggesting
+that in early stages of training, the optimizers are traversing more complex landscapes due to the
+random initialization of parameters.
 
-{\color{magenta}TODO: Update for the new results.}
-Loss Landscape along Update Directions.
-Fig.~\ref{fig:interp} illustrates the evolution of loss values along $N=20$ interpolation points on the line
-$\theta(\alpha) = (1 - \alpha)\theta_t + \alpha\theta_{t+1}$ across all 5 training epochs.
-At the early stage of the training process (epoch 1), SGD and Muon produce non-convex paths,
-while Adam and Lion are already showing convex paths. Starting from epoch 2, SGD, Adam,
-and Lion demonstrate convex, monotonically decreasing paths, while Muon remains non-convex until epoch 4, 
-reflecting the more exploratory nature of its orthogonalized updates.
+From the second epoch onwards, all four optimizers enter regions where the loss appears locally
+convex along the update vector, suggesting the optimizers settle into a regime where local geometry
+is better behaved.
+However we see that all optimizers except Muon step over points where the loss is lower than the
+endpoint. Muon on the other hand follows a linear decrease along the followed direction.
+Muon's trajectory becoming nearly linear suggests that it finds ``highways'' in the loss landscape.
 
-{\color{magenta}TODO: Discuss the convergence test results.}
+The empirical smoothness factors Table \ref{tab:smooth} provide quantitative insight into these
+trajectories. All optimizers exhibit a massive spike in $L$ during the first epoch, indicating high
+gradients and rapid changes in the landscape.
+Notably Lion shows the highest initial smoothness factor, which may be attributed to its use of the
+$\mathrm{sign}$ operator, forcing steps that can lead to sharper transitions.
+
+The results of the local optimality test are particularly surprising.
+The fact that the first-order characterization of convexity held for all sampled points across every
+optimizer suggests that the final parameters $\vec{\theta}$ reside in a flat and well-behaved basins.
+Even for larger perturbations $\varepsilon$ scaled by the gradient magnitude, the loss surface did
+not exhibit the sharp non-convexities often theorized in high-dimensional landscapes.
+This empirical verification indicates that while the global landscape is non-convex, the optimizers
+are effective at finding convex regions.
+
+Despite initially being highly non-convex, Muon outperforms the other optimizers by substantial
+margin, with better trajectory properties.
+This supports the hypothesis that the spectral norm-based updated of Muon provide a superior
+iductive bias for training deep architectures compared to the Adam or the sign-based updates of Lion.
 
 
 \section{Summary}
-{\color{magenta}TODO: Repeat abstract with results in mind.}
+This study compared the trajectories of SGD, Adam, Lion, and Muon on a standard MLP architecture.
+Our findings demonstrate that while all optimizers eventually reach locally convex regions, their
+paths to convergence differ geometrically.
+Muon emerged as the most efficient, not only achieving the lowest training loss (0.0600) and highest
+test accuracy (90.01\%), but also maintaining the most linear and smooth trajectory throughout
+training.
+
+Lion, while efficient in memory usage, exhibited higher initial smoothness factors, likely due to
+the discontinuous nature of the sign function in its update rule. Adam and SGD remained reliable
+benchmarks but were surpassed by Muon's ability to navigate the landscape without overshooting local
+minima along its update vector. Ultimately, our analysis suggests that newer algorithms like Muon
+offer superior inductive biases for neural network optimization, potentially reducing the number of
+iterations required to reach high-quality local minima in more complex, large-scale applications.
+Updated Conclusion Section
 
 
+\newpage
 \printbibliography
 
 \end{document}
-
 
