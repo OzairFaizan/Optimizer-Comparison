@@ -101,7 +101,7 @@ We use the trajectory to verify convexity by plotting the values, and we compute
 smoothness factor along the trajectory,
 $$ L = \max_i \frac{\lVert \nabla f(\vec{\theta}_i) - \nabla f(\vec{\theta}_{i+1}) \rVert}
                     {\lVert \vec{\theta}_i - \vec{\theta}_{i+1} \rVert}, $$
-where the gradients are computed via finite differences. 
+where $i \in \{0, \ldots, N-1\}$ indexes the interpolated points and the gradients are computed via finite differences. 
 
 
 Furthermore, we verify the first-order characterization of convexity by sampling $K=50$ points on
