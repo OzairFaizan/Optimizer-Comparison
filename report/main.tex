@@ -69,16 +69,16 @@ The cross-entropy loss is used with no regularization nor weight-decay for simpl
 
 The following four optimization algorithms are compared. Stochastic gradient descent updates its parameters using
 \begin{equation*}
-    \vec{\theta}_{t+1} = \vec{\theta}_t - \eta \vec{g}_t.
+    \vec{\theta}_{t+1} = \vec{\theta}_t - \eta \vec{g}_t
 \end{equation*}
 Here, $\vec{g}_t$ represents the stochastic gradient. The Adam optimizer computes the first- and second-moment averages of the gradient and performs bias-corrected adaptive steps per coordinate. The Lion optimizer uses only the sign of a momentum-gradient sum as the update direction:
 \begin{equation*}
     \vec{\theta}_{t+1} = \vec{\theta}_t -
-                \eta \mathrm{sign}\bigl(\beta_1 \vec{m}_t + (1-\beta_1) \vec{g}_t\bigr).
+                \eta \mathrm{sign}\bigl(\beta_1 \vec{m}_t + (1-\beta_1) \vec{g}_t\bigr),
 \end{equation*}
-The momentum is updated by
+where $\vec{m}_t$ is the momentum, updated as
 \begin{equation*}
-    \vec{m}_{t+1} = \beta_2 \vec{m}_t + (1-\beta_2) \vec{g}_t.
+    \vec{m}_{t+1} = \beta_2 \vec{m}_t + (1-\beta_2) \vec{g}_t
 \end{equation*}
 The Muon optimizer implements the Nesterov-type momentum in the direction of steepest descent in terms of the spectral norm and approximates it by performing the Newton-Schulz orthogonalization of the gradient matrix.
 
@@ -91,7 +91,7 @@ For each optimizer, the parameter vectors $\vec{\theta}_t$ and $\vec{\theta}_{t+
 each epoch for a total of 5 epochs.
 The loss over the training set is computed at the points along the line
 \begin{equation*}
-    \vec{\theta}(\alpha) = (1-\alpha)\vec{\theta}_t + \alpha\vec{\theta}_{t+1}
+    \vec{\theta}(\alpha) = (1-\alpha)\vec{\theta}_t + \alpha\vec{\theta}_{t+1},
 \end{equation*}
 for $\alpha \in \{0, 1/N, \ldots, 1\}$ and $N=50$.
 
