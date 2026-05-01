@@ -84,7 +84,7 @@ The Muon optimizer implements the Nesterov-type momentum in the direction of ste
 
 The hyperparameters used for our analysis are found by performing a grid search over learning rates
 in $\{10^{-4}, 10^{-3}, 10^{-2}\}$ and batch sizes in $\{32, 64, 128\}$ and selecting the
-combination that activation the lowest training loss for each optimizers after epoch 20.
+combination that achieves the lowest training loss for each optimizer after epoch 20.
 All other hyperparameters are kept at their published defaults.
 
 For each optimizer, the parameter vectors $\vec{\theta}_t$ and $\vec{\theta}_{t+1}$ are stored at
@@ -97,11 +97,11 @@ for $\alpha \in \{0, 1/N, \ldots, 1\}$ and $N=50$.
 
 This allows us to analyze local approximation of the loss along the ``average'' trajectory.
 
-We use the trajectory for verify convexity by plotting the values, and we compute the empirical
+We use the trajectory to verify convexity by plotting the values, and we compute the empirical
 smoothness factor along the trajectory,
 $$ L = \max_i \frac{\lVert \nabla f(\vec{\theta}_i) - \nabla f(\vec{\theta}_{i+1}) \rVert}
                     {\lVert \vec{\theta}_i - \vec{\theta}_{i+1} \rVert}, $$
-where the gradients are computed finite differences. 
+where the gradients are computed via finite differences. 
 
 
 Furthermore, we verify the first-order characterization of convexity by sampling $K=50$ points on
