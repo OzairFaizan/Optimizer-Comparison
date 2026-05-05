@@ -58,6 +58,18 @@ loss landscape, how smooth the loss appears along each step, and whether converg
 points satisfy local optimality conditions. Our analysis shows behavioral differences between
 optimizers that aggregate metrics alone may not reveal.
 
+\section{Related Work}
+The use of linear interpolation to visualize loss landscapes was pioneered by
+\cite{goodfellow2015qualitativelycharacterizingneuralnetwork}, who observed that from
+$\vec{\theta}_0$ to $\vec{\theta}_*$, neural networks do not encounter any ``significant obstacles''. 
+\cite{lucas2021analyzingmonotoniclinearinterpolation} provides a more comprehensive study extending
+previous works by evaluating explanations of the observed paths.
+
+Our approach provides more granularity by interpolating between each epoch ($\vec{\theta}_t$ and
+$\vec{\theta}_{t+1}$), allowing us to distinguish between initial potentially non-convex areas and
+later flat locally convex basins.
+
+
 \section{Models and Methods}
 We fit an MLP on the Fashion MNIST dataset which includes 10 different classes
 for image classification. This dataset contains a total of 60,000 gray-scale images of size
