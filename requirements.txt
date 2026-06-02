@@ -5,4 +5,3 @@ lion-pytorch
 matplotlib
 numpy
 ipywidgets
-pickle
