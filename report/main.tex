@@ -42,12 +42,14 @@
 
 \section{Introduction}
 The choice of the optimizer is central to the process of training deep neural networks, 
-influencing not only the speed of convergence but also the ability of the model to generalize. 
-There is a vast number of available optimizers that can be applied to train 
-a deep neural network, \cite{schneider2021descending} identified over one hundred unique algorithms, 
-yet only two have dominated the scene: Stochastic Gradient Descent (SGD) \cite{robbins1951stochastic} and Adam \cite{kingma2015adam}. 
-The Lion optimizer, which was developed based on symbolic search for update equations, 
-is able to achieve similar levels of effectiveness without having problems with large amounts of memory usage. 
+influencing not only the speed of convergence but also the ability of the model to generalize.
+There is a vast number of available optimizers that can be applied to train
+a deep neural network, \cite{schneider2021descending} identified over one hundred unique algorithms,
+yet only two have dominated the scene: Stochastic Gradient Descent (SGD)
+\cite{robbins1951stochastic} and Adam \cite{kingma2015adam}.
+The Lion optimizer, which was developed based on symbolic search for update equations,
+is able to achieve similar levels of effectiveness without having problems with large amounts of
+memory usage.
 Furthermore, the Muon optimizer, developed initially to speed up the NanoGPT
 training, has shown better convergence rates.
 
@@ -79,11 +81,14 @@ activation, followed by a linear classification layer, giving a total of approxi
 trainable parameters.
 The cross-entropy loss is used with no regularization nor weight-decay for simplicity.
 
-The following four optimization algorithms are compared. Stochastic gradient descent updates its parameters using
+The following four optimization algorithms are compared. Stochastic gradient descent updates its
+parameters using
 \begin{equation*}
     \vec{\theta}_{t+1} = \vec{\theta}_t - \eta \vec{g}_t
 \end{equation*}
-Here, $\vec{g}_t$ represents the stochastic gradient. The Adam optimizer computes the first- and second-moment averages of the gradient and performs bias-corrected adaptive steps per coordinate. The Lion optimizer uses only the sign of a momentum-gradient sum as the update direction:
+Here, $\vec{g}_t$ represents the stochastic gradient. The Adam optimizer computes the first- and
+second-moment averages of the gradient and performs bias-corrected adaptive steps per coordinate.
+The Lion optimizer uses only the sign of a momentum-gradient sum as the update direction:
 \begin{equation*}
     \vec{\theta}_{t+1} = \vec{\theta}_t -
                 \eta \mathrm{sign}\bigl(\beta_1 \vec{m}_t + (1-\beta_1) \vec{g}_t\bigr),
@@ -92,7 +97,10 @@ where $\vec{m}_t$ is the momentum, updated as
 \begin{equation*}
     \vec{m}_{t+1} = \beta_2 \vec{m}_t + (1-\beta_2) \vec{g}_t
 \end{equation*}
-The Muon optimizer implements the Nesterov-type momentum in the direction of steepest descent in terms of the spectral norm and approximates it by performing the Newton-Schulz orthogonalization of the gradient matrix.
+The Muon optimizer utilizes a standard momentum buffer and implements a Stochastic Frank-Wolfe
+update by solving a Linear Minimization Oracle (LMO) over the operator-norm unit ball. It achieves
+this by performing Newton-Schulz orthogonalization on the momentum matrix, which efficiently sets
+all singular values to 1 without computing an SVD.
 
 The hyperparameters used for our analysis are found by performing a grid search over learning rates
 in $\{10^{-4}, 10^{-3}, 10^{-2}\}$ and batch sizes in $\{32, 64, 128\}$ and selecting the
@@ -113,7 +121,8 @@ We use the trajectory to verify convexity by plotting the values, and we compute
 smoothness factor along the trajectory,
 $$ L = \max_i \frac{\lVert \nabla f(\vec{\theta}_i) - \nabla f(\vec{\theta}_{i+1}) \rVert}
                     {\lVert \vec{\theta}_i - \vec{\theta}_{i+1} \rVert}, $$
-where $i \in \{0, \ldots, N-1\}$ indexes the interpolated points and the gradients are computed via finite differences. 
+where $i \in \{0, \ldots, N-1\}$ indexes the interpolated points and the gradients are computed via
+finite differences.
 
 
 Furthermore, we verify the first-order characterization of convexity by sampling $K=50$ points on
